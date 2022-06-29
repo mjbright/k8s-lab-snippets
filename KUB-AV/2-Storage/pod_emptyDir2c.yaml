@@ -1,0 +1,26 @@
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-ed-2
+spec:
+  containers:
+  
+  - image: mjbright/k8s-demo:alpine1
+    name: c1
+    command: [ '/bin/sh', '-c', 'while true; do date >> /log.c1/date.log; sleep 1; done']
+    volumeMounts:
+    - mountPath: /log.c1
+      name: log-volume
+      
+  - image: mjbright/k8s-demo:alpine1
+    name: c2
+    command: [ '/bin/sh', '-c', 'tail -f /log.c2/date.log']
+    volumeMounts:
+    - mountPath: /log.c2
+      name: log-volume
+      
+  volumes:
+  - name: log-volume
+    emptyDir: {}
+

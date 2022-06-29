@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-web-static
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  mountOptions:
+    - nfsvers=4.1
+  csi:
+    driver: nfs.csi.k8s.io
+    readOnly: false
+    volumeHandle: unique-volumeid  # make sure it's a unique id in the cluster
+    volumeAttributes:
+      server: 10.96.200.2
+      share: /
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-web-static
+spec:
+  storageClassName: ""
+
+  # statically created PV to use:
+  volumeName: pv-web-static
+
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-nfs-example-static
+spec:
+  containers:
+    - image: mjbright/k8s-demo:alpine1
+      name:  k8s-demo
+      ports:
+        - containerPort: 80
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /var/www
+          name: pvc-web-static
+  volumes:
+    - name: pvc-web-static
+      persistentVolumeClaim:
+        claimName: pvc-web-static

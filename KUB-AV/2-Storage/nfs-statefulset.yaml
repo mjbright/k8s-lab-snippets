@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: test-statefulset
+spec:
+  selector:
+    matchLabels:
+      app: test-sset # has to match .spec.template.metadata.labels
+  serviceName: 'test-sset'
+
+  replicas: 3
+
+  template:
+    metadata:
+      labels:
+        app: test-sset # has to match .spec.selector.matchLabels
+
+    spec:
+      #terminationGracePeriodSeconds: 10
+      containers:
+        - name: test-sset
+          image: mjbright/k8s-demo:alpine2
+          command: ['/bin/sh', '-c', 'while true; do echo [host $(NODE_NAME)] pod $(hostname)]: $(date) >> /mnt/statefulset-date.log; sleep 1; done']
+
+          # Get NODE_NAME via downwardAPI - used in above command
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+
+          ports:
+            - containerPort: 80
+              name: sset-port
+
+          volumeMounts:
+            - name: pvc-sset
+              mountPath: /mnt
+
+  volumeClaimTemplates:
+    - metadata:
+        name: pvc-sset
+      spec:
+        accessModes:
+          - ReadWriteMany
+        storageClassName: nfs-csi
+        resources:
+          requests:
+            storage: 1Mi

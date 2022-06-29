@@ -1,0 +1,31 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-web-dyn
+spec:
+  storageClassName: nfs-csi
+
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-nfs-example-dyn
+spec:
+  containers:
+    - image: mjbright/k8s-demo:alpine1
+      name:  k8s-demo
+      ports:
+        - containerPort: 80
+          protocol: TCP
+      volumeMounts:
+        - mountPath: /var/www
+          name: pvc-web-dyn
+  volumes:
+    - name: pvc-web-dyn
+      persistentVolumeClaim:
+        claimName: pvc-web-dyn
